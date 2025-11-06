@@ -17,7 +17,7 @@ services:
       - '--entrypoints.web_https.http.tls.certResolver=le'
       - '--certificatesresolvers.le.acme.tlschallenge=true'
       - '--certificatesresolvers.le.acme.email=elmir_kuba@vk.com'
-      - '--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json'
+      - '--certificatesresolvers.le.acme.storage=/../../letsencrypt/acme.json'
     networks:
       - invest-helper_proxynet
     ports:
@@ -26,7 +26,7 @@ services:
       - '8080:8080'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./letsencrypt:/letsencrypt
+      # - ./../../letsencrypt:/letsencrypt
 
   # Сервис frontend приложения
   prod_invest-helper_react-frontend:
