@@ -10,6 +10,7 @@ services:
       - '--entrypoints.web.address=:80'
       - '--log.level=DEBUG'
       - '--providers.docker.exposedByDefault=false'
+      - '--providers.docker.network=invest-helper_proxynet'
     ports:
       - '80:80'
       - '8080:8080'
