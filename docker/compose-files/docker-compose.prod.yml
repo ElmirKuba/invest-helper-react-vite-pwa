@@ -1,13 +1,15 @@
 # Сервисы поднимаемые в Docker Compose
 services:
   # Сервис traefik reverse proxy manager
-  traefik:
+  prod_traefik_reverse-proxy:
     image: traefik:v3.5
+    container_name: prod_traefik_reverse-proxy
     command:
       - '--api.insecure=true'
       - '--providers.docker=true'
       - '--entrypoints.web.address=:80'
       - '--log.level=DEBUG'
+      - '--providers.docker.exposedByDefault=false'
     ports:
       - '80:80'
       - '8080:8080'
