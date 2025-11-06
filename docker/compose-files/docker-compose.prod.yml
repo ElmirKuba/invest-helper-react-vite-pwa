@@ -13,6 +13,8 @@ services:
       #Entrypoints:
       - '--entrypoints.web_http.address=:80'
       - '--entrypoints.web_https.address=:443'
+      - '--entrypoints.web_http.http.redirections.entrypoint.to=web_https'
+      - '--entrypoints.web_http.http.redirections.entrypoint.scheme=web_https'
       #SSL Let's encrypt:
       - '--entrypoints.web_https.http.tls.certResolver=le'
       - '--certificatesresolvers.le.acme.tlschallenge=true'
