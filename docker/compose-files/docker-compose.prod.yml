@@ -1,0 +1,24 @@
+# Сервисы поднимаемые в Docker Compose
+services:
+  # Сервис frontend приложения
+  prod_invest-helper_react-frontend:
+    container_name: prod_invest-helper_react-frontend
+    build:
+      context: ./../../
+      dockerfile: ./docker/dockerfiles/react-frontend/Dockerfile.production
+    restart: unless-stopped
+    environment:
+      - PROJECT_STATUS=${DOCKER_MODE}
+    # labels:
+    expose:
+      - 80
+    ports:
+      - 5553:80
+    networks:
+      - invest-helper_prod-net
+    # depends_on:
+
+networks:
+  invest-helper_prod-net:
+    name: invest-helper_prod-net
+    external: true
