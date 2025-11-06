@@ -32,7 +32,7 @@ services:
       - 80
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.invest_frontend.rule=Host(`vdska.xn--h1ahceki4e.xn--p1ai`)'
+      - 'traefik.http.routers.invest_frontend.rule=Host(`invest-helper.vdska.xn--h1ahceki4e.xn--p1ai`)'
     networks:
       - invest-helper_prod-net
       - invest-helper_proxynet
