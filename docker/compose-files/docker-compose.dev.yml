@@ -1,0 +1,37 @@
+# Сервисы поднимаемые в Docker Compose
+services:
+  # Сервис frontend приложения
+  dev_invest-helper_react-frontend:
+    container_name: dev_invest-helper_react-frontend
+    build:
+      context: ./../../
+      dockerfile: ./docker/dockerfiles/react-frontend/Dockerfile.development
+      args:
+        FRONTEND_PORT: ${FRONTEND_PORT}
+    restart: unless-stopped
+    environment:
+      - PROJECT_STATUS=${DOCKER_MODE}
+    volumes:
+      - ./../../src:/dev_invest-helper_workspace/src:rw
+      - ./../../eslint.config.js:/dev_invest-helper_workspace/eslint.config.js:rw
+      - ./../../index.html:/dev_invest-helper_workspace/index.html:rw
+      - ./../../package-lock.json:/dev_invest-helper_workspace/package-lock.json:rw
+      - ./../../package.json:/dev_invest-helper_workspace/package.json:rw
+      - ./../../tsconfig.json:/dev_invest-helper_workspace/tsconfig.json:rw
+      - ./../../tsconfig.app.json:/dev_invest-helper_workspace/tsconfig.app.json:rw
+      - ./../../tsconfig.node.json:/dev_invest-helper_workspace/tsconfig.node.json:rw
+      - ./../../vite.config.ts:/dev_invest-helper_workspace/vite.config.ts:rw
+    # command: sh -c "sleep 30s && npx vite --host=0.0.0.0 --port=${FRONTEND_PORT}"
+    expose:
+      - ${FRONTEND_PORT}
+    ports:
+      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+    networks:
+      - invest-helper_dev-net
+
+# Сети Docker Compose
+networks:
+  # Сеть Docker Compose продукта для разработки
+  invest-helper_dev-net:
+    name: invest-helper_dev-net
+    external: true
