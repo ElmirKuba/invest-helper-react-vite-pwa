@@ -5,7 +5,8 @@ services:
     image: traefik:v3.5
     container_name: prod_traefik_reverse-proxy
     command:
-      - '--api.insecure=true'
+      - '--api.insecure=false'
+      - '--api.dashboard=true'
       - '--providers.docker=true'
       - '--log.level=DEBUG'
       - '--providers.docker.exposedByDefault=false'
@@ -21,12 +22,18 @@ services:
       - '--certificatesresolvers.le.acme.tlschallenge=true'
       - '--certificatesresolvers.le.acme.email=elmir_kuba@vk.com'
       - '--certificatesresolvers.le.acme.storage=/../../letsencrypt/acme.json'
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.dashboard.rule=Host(`traefik.vdska.xn--h1ahceki4e.xn--p1ai`)'
+      - 'traefik.http.routers.dashboard.entrypoints=web_https'
+      - 'traefik.http.routers.dashboard.service=api@internal'
+      - 'traefik.http.routers.dashboard.middlewares=dashboard-auth'
+      - 'traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$5eFpFlpL$$0E3Xa4qBkIws2Q/xgIIFs/'
     networks:
       - invest-helper_proxynet
     ports:
       - '80:80'
       - '443:443'
-      - '8080:8080'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./../../letsencrypt:/letsencrypt
@@ -48,7 +55,6 @@ services:
     networks:
       - invest-helper_prod-net
       - invest-helper_proxynet
-    # depends_on:
 
 networks:
   invest-helper_prod-net:
