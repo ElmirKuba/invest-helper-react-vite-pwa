@@ -8,16 +8,25 @@ services:
       - '--api.insecure=true'
       - '--providers.docker=true'
       - '--log.level=DEBUG'
-      - '--entrypoints.web.address=:80'
       - '--providers.docker.exposedByDefault=false'
       - '--providers.docker.network=invest-helper_proxynet'
+      #Entrypoints:
+      - '--entrypoints.web_http.address=:80'
+      - '--entrypoints.web_https.address=:443'
+      #SSL Let's encrypt:
+      - '--entrypoints.web_https.http.tls.certResolver=le'
+      - '--certificatesresolvers.le.acme.tlschallenge=true'
+      - '--certificatesresolvers.le.acme.email=elmir_kuba@vk.com'
+      - '--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json'
     networks:
       - invest-helper_proxynet
     ports:
       - '80:80'
+      - '443:443'
       - '8080:8080'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
 
   # Сервис frontend приложения
   prod_invest-helper_react-frontend:
@@ -32,7 +41,6 @@ services:
       - 80
     labels:
       - 'traefik.enable=true'
-      # - 'traefik.http.routers.invest_frontend.rule=Host(`investor-helper.vdska.xn--h1ahceki4e.xn--p1ai`)'
       - 'traefik.http.routers.invest_frontend.rule=Host(`${FRONTEND_PUBLIC_URL}`)'
     networks:
       - invest-helper_prod-net

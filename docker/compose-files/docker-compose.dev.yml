@@ -7,7 +7,7 @@ services:
       context: ./../../
       dockerfile: ./docker/dockerfiles/react-frontend/Dockerfile.development
       args:
-        FRONTEND_PORT: ${FRONTEND_PORT}
+        FRONTEND_DEV_PORT: ${FRONTEND_DEV_PORT}
     restart: unless-stopped
     environment:
       - PROJECT_STATUS=${DOCKER_MODE}
@@ -21,11 +21,11 @@ services:
       - ./../../tsconfig.app.json:/dev_invest-helper_workspace/tsconfig.app.json:rw
       - ./../../tsconfig.node.json:/dev_invest-helper_workspace/tsconfig.node.json:rw
       - ./../../vite.config.ts:/dev_invest-helper_workspace/vite.config.ts:rw
-    # command: sh -c "sleep 30s && npx vite --host=0.0.0.0 --port=${FRONTEND_PORT}"
+    # command: sh -c "sleep 30s && npx vite --host=0.0.0.0 --port=${FRONTEND_DEV_PORT}"
     expose:
-      - ${FRONTEND_PORT}
+      - ${FRONTEND_DEV_PORT}
     ports:
-      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+      - ${FRONTEND_DEV_PORT}:${FRONTEND_DEV_PORT}
     networks:
       - invest-helper_dev-net
 

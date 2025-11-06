@@ -4,8 +4,8 @@ FROM node:24.11.0
 # Рабочая дирректория внутри контейнера Frontend-части продукта Docker Compose
 WORKDIR /dev_invest-helper_workspace
 
-ARG FRONTEND_PORT
-ENV FRONTEND_PORT=${FRONTEND_PORT}
+ARG FRONTEND_DEV_PORT
+ENV FRONTEND_DEV_PORT=${FRONTEND_DEV_PORT}
 
 # Копируем все файлы у которых наименование начинается на "package" и заканчивается типом файла ".json"
 COPY ./package*.json ./
@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 4200
 
 # Запускаем Frontend-часть продукта внутри контейнера Docker Compose в режиме разработки и слежки за изменением файлов с кодом
-CMD ["sh", "-c", "npx vite --host=0.0.0.0 --port=${FRONTEND_PORT}"]
+CMD ["sh", "-c", "npx vite --host=0.0.0.0 --port=${FRONTEND_DEV_PORT}"]
