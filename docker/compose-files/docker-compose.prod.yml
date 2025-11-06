@@ -29,7 +29,8 @@ services:
     ports:
       - 5553:80
     labels:
-      - 'traefik.http.routers.invest_frontend.rule=Host(`${FRONTEND_PUBLIC_URL}`)'
+      - 'traefik.http.routers.invest_frontend.rule=Host(`vdska.xn--h1ahceki4e.xn--p1ai`)'
+      # - 'traefik.http.routers.invest_frontend.rule=Host(`${FRONTEND_PUBLIC_URL}`)'
     networks:
       - invest-helper_prod-net
       - invest-helper_proxynet
