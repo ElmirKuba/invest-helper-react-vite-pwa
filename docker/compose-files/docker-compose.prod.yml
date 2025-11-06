@@ -24,7 +24,7 @@ services:
       - '--certificatesresolvers.le.acme.storage=/../../letsencrypt/acme.json'
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.dashboard.rule=Host(`traefik.vdska.xn--h1ahceki4e.xn--p1ai`)' // echo $(htpasswd -nb admin admin) | sed -e s/\\$/\\$\\$/g
+      - 'traefik.http.routers.dashboard.rule=Host(`traefik.vdska.xn--h1ahceki4e.xn--p1ai`)' # echo $(htpasswd -nb admin admin) | sed -e s/\\$/\\$\\$/g
       - 'traefik.http.routers.dashboard.entrypoints=web_https'
       - 'traefik.http.routers.dashboard.service=api@internal'
       - 'traefik.http.routers.dashboard.middlewares=dashboard-auth'
