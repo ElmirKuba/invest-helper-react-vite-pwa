@@ -28,11 +28,19 @@ services:
       - 80
     ports:
       - 5553:80
+    labels:
+      - 'traefik.http.routers.invest_frontend.rule=Host(`invest-helper.vdska.нормисы.рф`)'
+      # - 'traefik.http.routers.invest_frontend.rule=Host(`${FRONTEND_PUBLIC_URL}`)'
     networks:
       - invest-helper_prod-net
+      - invest-helper_proxynet
     # depends_on:
 
 networks:
   invest-helper_prod-net:
     name: invest-helper_prod-net
+    external: true
+
+  invest-helper_proxynet:
+    name: invest-helper_proxynet
     external: true
