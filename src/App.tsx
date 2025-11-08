@@ -7,15 +7,13 @@ function App() {
 
   return (
     <div className="App">
-      <div>Текст: {count}</div>
-      <div> новый текст </div>
-      <div> еще текст</div>
+      <div>Счетчик: {count}</div>
       <button
         onClick={() => {
           setCount(count + 1);
         }}
       >
-        Кнопка имеет другое название
+        Нажать для инкримента
       </button>
     </div>
   );
