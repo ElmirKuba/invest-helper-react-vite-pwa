@@ -70,13 +70,19 @@ export async function compareVersions(): Promise<VersionCheckResult> {
   return { cachedVersion, remoteVersion, isDifferent };
 }
 
-// При старте приложения: fetch версии с сервера и сохранить в runtime-cache
 export async function cacheVersionOnStartup(): Promise<string | null> {
   try {
+    const cache = await caches.open('version-json-cache');
+    const existing = await cache.match('/version.json');
+    if (existing) {
+      // уже есть локальная запись — ничего не перезаписываем
+      const j = await existing.clone().json();
+      return typeof j?.version === 'string' ? j.version : null;
+    }
+
+    // нет — попробуем получить с сервера и сохранить
     const res = await fetch('/version.json', { cache: 'no-store', credentials: 'same-origin' });
     if (!res || !res.ok) return null;
-    const cache = await caches.open('version-json-cache');
-    // Сохраняем под относительным ключом без query — чтобы later caches.match('/version.json') сработал
     await cache.put('/version.json', res.clone());
     const j = await res.json();
     return typeof j?.version === 'string' ? j.version : null;

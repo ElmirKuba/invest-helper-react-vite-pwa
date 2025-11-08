@@ -100,56 +100,73 @@ registerSW({
   },
 });
 
-// Периодическая проверка: вызывает registration.update() и, если есть waiting — показывает prompt
+// Вместо текущей реализации periodicCheckLoop() подставь этот код
 async function periodicCheckLoop() {
   console.log('Я выполнился (periodicCheckLoop)');
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
 
   try {
-    // убедимся, что при первом заходе мы закешировали server copy в runtime-cache
+    // 1) сначала читаем локальную cached версию (предпочтительно precache или ранее сохранённый runtime)
+    let cachedVersion = null;
     try {
-      await cacheVersionOnStartup();
+      cachedVersion = await readCachedVersion(); // readCachedVersion импортируется из version-check.ts
     } catch (e) {
-      console.debug('[pwa] cacheVersionOnStartup error', e);
+      console.debug('[pwa] readCachedVersion error', e);
     }
 
-    try {
-      const { cachedVersion, remoteVersion, isDifferent } = await compareVersions();
-      console.log('я сравниваю версии', { cachedVersion, remoteVersion, isDifferent });
-      if (isDifferent) {
-        // throttle prompt внутри attemptActivateWaiting, но тут — показываем сначала prompt о новой версии
-        const ok = confirm(
-          `Доступна новая версия приложения.\n` +
-            `Установленная версия: ${cachedVersion}\n` +
-            `Серверная версия: ${remoteVersion}\n\n` +
-            `Обновить сейчас?`
-        );
+    // 2) если локальной версии нет — инициализируем (только в этом случае)
+    if (!cachedVersion) {
+      try {
+        await cacheVersionOnStartup(); // положит server copy в runtime-cache только если нет локальной
+        // обновим cachedVersion после инициализации
+        cachedVersion = await readCachedVersion();
+      } catch (e) {
+        console.debug('[pwa] cacheVersionOnStartup error', e);
+      }
+    }
 
-        if (ok) {
-          const reg = await navigator.serviceWorker.getRegistration();
-          // попробуем стандартный flow: если есть waiting — активируем; если нет — вызвать reg.update()
-          if (reg?.waiting) {
-            await attemptActivateWaiting(reg);
-          } else {
-            try {
-              await reg?.update();
-              if (reg?.waiting) {
-                await attemptActivateWaiting(reg);
-              } else {
-                // fallback — перезагрузить страницу (возможно новые ассеты не применятся без SW, но попробуем)
-                location.reload();
-              }
-            } catch {
+    // 3) запрашиваем свежую версию с сервера (не перезаписываем локальную)
+    let remoteVersion = null;
+    try {
+      remoteVersion = await fetchRemoteVersion(); // fetchRemoteVersion импортируется из version-check.ts
+    } catch (e) {
+      console.debug('[pwa] fetchRemoteVersion error', e);
+    }
+
+    const isDifferent = !!(remoteVersion && cachedVersion && remoteVersion !== cachedVersion);
+
+    console.log('я сравниваю версии', { cachedVersion, remoteVersion, isDifferent });
+
+    if (isDifferent) {
+      // throttle prompt внутри attemptActivateWaiting, но тут — показываем сначала prompt о новой версии
+      const ok = confirm(
+        `Доступна новая версия приложения.\n` +
+          `Установленная версия: ${cachedVersion}\n` +
+          `Серверная версия: ${remoteVersion}\n\n` +
+          `Обновить сейчас?`
+      );
+
+      if (ok) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        // попробуем стандартный flow: если есть waiting — активируем; если нет — вызвать reg.update()
+        if (reg?.waiting) {
+          await attemptActivateWaiting(reg);
+        } else {
+          try {
+            await reg?.update();
+            if (reg?.waiting) {
+              await attemptActivateWaiting(reg);
+            } else {
+              // fallback — перезагрузить страницу (возможно новые ассеты не применятся без SW, но попробуем)
               location.reload();
             }
+          } catch {
+            location.reload();
           }
-        } else {
-          // пользователь отклонил — ничего не делаем (throttle защитит от спама)
         }
+      } else {
+        // пользователь отклонил — ничего не делаем (throttle защитит от спама)
       }
-    } catch (e) {
-      // ignore version check errors
-      console.debug('[pwa] version check failed', e);
     }
 
     const reg = await navigator.serviceWorker.getRegistration();
