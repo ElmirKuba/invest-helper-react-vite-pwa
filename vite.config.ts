@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{html,css,js,ico,png,svg,jpg}'],
+        globPatterns: ['**/*.{html,css,js,ico,png,svg,jpg,webmanifest,json,woff2}'],
       },
       manifest: {
         theme_color: '#8936FF',
@@ -46,8 +46,8 @@ export default defineConfig({
         display: 'standalone',
         lang: 'ru-RU',
         name: 'Invest Helper',
-        short_name: 'IH',
-        start_url: '/',
+        short_name: 'IH PWA',
+        start_url: '.',
         description: 'Помощник диверсификации портфеля',
       },
     }),

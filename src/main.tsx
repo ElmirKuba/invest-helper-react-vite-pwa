@@ -15,7 +15,18 @@ if (isNil(rootHtmlElement)) {
 }
 
 registerSW({
+  // /** true - пытается немедленно активировать регистрацию */
   immediate: true,
+  // onNeedRefresh() {
+  //   // показать пользователю UI — "Доступна новая версия"
+  //   // например, сохранить функцию в state и показать кнопку "Обновить"
+  //   // при клике вызвать updateSW(true)
+  //   console.log('New SW available — prompt user to update');
+  // },
+  // onOfflineReady() {
+  //   // опционально — показать "Приложение доступно оффлайн"
+  //   console.log('App ready to work offline');
+  // },
 });
 
 createRoot(rootHtmlElement).render(
