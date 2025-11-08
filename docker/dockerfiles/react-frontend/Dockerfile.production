@@ -1,3 +1,4 @@
+# docker/dockerfiles/react-frontend/Dockerfile.production
 # Версия Node.js
 FROM node:24.11.0 as build
 
@@ -10,22 +11,25 @@ RUN npm install --verbose
 
 COPY . .
 
+# Собираем приложение
 RUN npm run build
 
-FROM nginx:latest as running
-
-COPY --from=build /prod_invest-helper_workspace/dist /usr/share/nginx/html
-
-COPY --from=build /prod_invest-helper_workspace/src/nginx-conf/default.conf /etc/nginx/conf.d/default.conf
-
+# Генерируем version.json в dist/ (в build stage, где есть node)
 ARG BUILD_TS
 ARG BUILD_ID
-
-# fallback: если build args не передали — сгенерируем и положим файл прямо в корень nginx-раздачи
 RUN if [ -z "$BUILD_TS" ]; then BUILD_TS=$(date +%s%3N); fi && \
     if [ -z "$BUILD_ID" ]; then BUILD_ID=$(node -e "console.log(require('crypto').randomUUID())"); fi && \
-    printf '{ "version": "%s_%s" }' "$BUILD_TS" "$BUILD_ID" > /usr/share/nginx/html/version.json
+    mkdir -p dist && printf '{ "version": "%s_%s" }' "$BUILD_TS" "$BUILD_ID" > dist/version.json
 
+# --------------------------------------------------------------------
+# Runtime stage: nginx
+FROM nginx:latest as running
+
+# Копируем готовый сборочный артефакт (включая dist/version.json)
+COPY --from=build /prod_invest-helper_workspace/dist /usr/share/nginx/html
+
+# Конфиг nginx
+COPY --from=build /prod_invest-helper_workspace/src/nginx-conf/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
