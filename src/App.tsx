@@ -9,12 +9,13 @@ function App() {
     <div className="App">
       <div>Текст: {count}</div>
       <div> новый текст </div>
+      <div> еще текст</div>
       <button
         onClick={() => {
           setCount(count + 1);
         }}
       >
-        Кнопка
+        Кнопка имеет другое название
       </button>
     </div>
   );
