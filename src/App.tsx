@@ -8,6 +8,7 @@ function App() {
   return (
     <div className="App">
       <div>Текст: {count}</div>
+      <div> новый текст </div>
       <button
         onClick={() => {
           setCount(count + 1);
