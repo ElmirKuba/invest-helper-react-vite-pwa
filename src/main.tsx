@@ -1,7 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { isNil } from 'lodash';
-import { registerSW } from 'virtual:pwa-register';
 
 import './index.css';
 
@@ -14,20 +13,11 @@ if (isNil(rootHtmlElement)) {
   throw new Error('Корневой элемент не найден!');
 }
 
-const updateSW = registerSW({
-  // /** true - пытается немедленно активировать регистрацию */
-  // immediate: true,
-  onNeedRefresh() {
-    // лучше — сохранить флаг в state и показать пользователю кнопку
-    // Пример простого prompt:
-    if (confirm('Доступна новая версия приложения. Обновить сейчас?')) {
-      updateSW(true); // активируем новую версию
-    }
-  },
-  onOfflineReady() {
-    console.log('Приложение доступно оффлайн');
-  },
-});
+// регистрация PWA (выполнится сразу при импорте)
+if (typeof window !== 'undefined') {
+  // динамический импорт не обязателен для SPA, но безопасен для SSR-проекта
+  import('./pwa');
+}
 
 createRoot(rootHtmlElement).render(
   <StrictMode>
