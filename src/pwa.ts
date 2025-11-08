@@ -1,54 +1,172 @@
 // src/pwa.ts
+// Регистрация PWA + периодические проверки на новую версию (каждые 5 минут)
+// + безопасный flow активации новой версии по подтверждению пользователя.
+//
+// Внимание: принудительное unregister() / register() — небезопасно и отключено (см. ниже).
+
 import { registerSW } from 'virtual:pwa-register';
 
-/**
- * Тип для функции обновления Service Worker.
- * По документации registerSW возвращает функцию вида (reload?: boolean) => Promise<void>
- */
-type UpdateSW = (reload?: boolean) => Promise<void>;
+const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 минут
+const PROMPT_THROTTLE_MS = 10 * 60 * 1000; // не показывать prompt чаще чем раз в 10 минут
+const CONTROLLER_CHANGE_TIMEOUT = 3500; // ms — ждём controllerchange (iOS может блокировать)
 
-/**
- * Безопасная "заглушка" — гарантируем, что updateSW всегда будет функцией.
- * Это позволяет не получать ошибку "Object is possibly 'undefined'".
- */
-let updateSW: UpdateSW = () => Promise.resolve();
+// локальная переменная-замыкание от registerSW
+// let updateSW: ((reloadPage?: boolean) => Promise<void>) | undefined;
+let lastPromptAt = 0;
 
-/**
- * Регистрируем SW. registerSW обычно возвращает функцию обновления,
- * поэтому перезаписываем нашу переменную на реальную реализацию.
- */
-updateSW = registerSW({
+// Вспомогательная функция — аккуратно запускает flow обновления при наличии waiting registration
+async function attemptActivateWaiting(reg: ServiceWorkerRegistration | undefined) {
+  if (!reg) return;
+
+  // Если нет waiting - ничего не делаем
+  if (!reg.waiting) return;
+
+  const now = Date.now();
+  if (now - lastPromptAt < PROMPT_THROTTLE_MS) {
+    // Защита от частых prompt'ов
+    console.log('[pwa] skipped prompt — throttled');
+    return;
+  }
+
+  lastPromptAt = now;
+
+  // Покажем простой confirm (как вы и просили).
+  const ok = confirm('Доступна новая версия приложения. Обновить сейчас?');
+  if (!ok) {
+    console.log('[pwa] user declined update (keeps waiting SW)');
+    // оставляем waiting как есть (контролируемое обновление)
+    return;
+  }
+
+  try {
+    // Попросим waiting SW вызвать skipWaiting
+    reg.waiting.postMessage?.({ type: 'SKIP_WAITING' });
+
+    // Ждём controllerchange (новый SW возьмёт управление)
+    await new Promise<void>((resolve, reject) => {
+      let handled = false;
+
+      const onControllerChange = () => {
+        if (handled) return;
+        handled = true;
+        navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+        // немного подождать перед reload чтобы контроллер точно применился
+        setTimeout(() => resolve(), 200);
+      };
+
+      navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
+      // таймаут — если controllerchange не наступил, reject
+      setTimeout(() => {
+        if (!handled) {
+          navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+          reject(new Error('controllerchange timeout'));
+        }
+      }, CONTROLLER_CHANGE_TIMEOUT);
+    });
+
+    // Если дошли сюда — контроллер сменился, делаем перезагрузку чтобы загрузить новые ассеты
+    location.reload();
+  } catch (err) {
+    console.log('[pwa] activation fallback — controllerchange not fired or failed', err);
+    // Обычно это iOS Home Screen: показать пользовательскую инструкцию
+    alert(
+      'Обновление не удалось автоматически. ' +
+        'На некоторых устройствах (iOS) требуется полностью закрыть приложение (смахнуть вверх в переключателе задач) и открыть снова, чтобы применить обновление.'
+    );
+    // В этом случае reg.waiting остаётся в waiting — повторные периодические проверки предложат обновление снова
+  }
+}
+
+// Главная логика регистрации
+// updateSW = registerSW({
+registerSW({
   immediate: true,
   onNeedRefresh() {
-    const agree = confirm('Доступна новая версия приложения. Обновить сейчас?');
-    if (!agree) {
-      console.log('Пользователь отказался обновиться — новая версия остаётся в статусе waiting.');
-      return;
-    }
-
-    // Вызываем функцию обновления. Поскольку updateSW у нас гарантированно функция,
-    // TypeScript проблем не выдаст.
-    updateSW(true)
-      .then(() => {
-        // Небольшой запасной reload — повышает надёжность обновления в реальных условиях.
-        setTimeout(() => {
-          try {
-            location.reload();
-          } catch (e) {
-            /* no-op */
-          }
-        }, 300);
-      })
-      .catch(() => {
-        // В случае ошибки — всё равно пробуем перезагрузиться.
-        try {
-          location.reload();
-        } catch (e) {
-          /* no-op */
-        }
-      });
+    // этот callback срабатывает, когда vite-plugin-pwa увидел новую версию
+    // делаем стандартный prompt/flow (переиспользуем attemptActivateWaiting)
+    (async () => {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        await attemptActivateWaiting(reg ?? undefined);
+      } catch (e) {
+        console.log('[pwa] onNeedRefresh error', e);
+      }
+    })();
   },
   onOfflineReady() {
-    console.log('Приложение готово работать оффлайн.');
+    console.log('[pwa] offline ready');
   },
-}) as unknown as UpdateSW;
+});
+
+// Периодическая проверка: вызывает registration.update() и, если есть waiting — показывает prompt
+async function periodicCheckLoop() {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg) {
+      // Попытка скачать новую версию
+      try {
+        await reg.update();
+      } catch (e) {
+        // ignore update errors
+      }
+
+      // Если появилась waiting версия — попытаться показать prompt
+      if (reg.waiting) {
+        attemptActivateWaiting(reg);
+      }
+    } else {
+      // Если нет регистрации (не зарегистрирован), можно попробовать зарегать через updateSW
+      try {
+        // updateSW(undefined) не даст нам reg, но registerSW уже зарегистрирован выше
+        // Оставляем здесь для информации.
+      } catch (e) {
+        // ignore
+      }
+    }
+  } catch (e) {
+    console.log('[pwa] periodicCheckLoop failed', e);
+  } finally {
+    // следующая проверка через CHECK_INTERVAL_MS
+    setTimeout(periodicCheckLoop, CHECK_INTERVAL_MS);
+  }
+}
+
+// Запустить цикл (не дожидаясь рендера)
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  // Небольшая задержка чтобы регистрация успела, а затем стартуем цикл
+  setTimeout(() => {
+    periodicCheckLoop();
+  }, 1500);
+}
+
+/* ========== ВНИМАНИЕ: "экспериментальная / опасная" функция ========== 
+   Ниже — пример того, как можно пробовать делать unregister() + последующую регистрацию скриптом.
+   Это **не рекомендуется** в проде: может привести к временному отсутствию контролирующего SW,
+   потерям кэшированных данных, странному поведению на iOS/Android. Оставил как закомментированный
+   инструмент для экспериментов. Если захотите включить — убедитесь, что понимаете риски.
+*/
+
+// async function bruteForceReinstall() {
+//   if (!('serviceWorker' in navigator)) return;
+//   try {
+//     const reg = await navigator.serviceWorker.getRegistration();
+//     if (reg) {
+//       // попытка удалить SW
+//       await reg.unregister();
+//       console.log('[pwa] unregistered');
+//     }
+//     // затем пробуем снова зарегистрировать (virtual:pwa-register уже инициировал регистрацию в начале файла)
+//     // но можно явно вызвать updateSW
+//     await updateSW?.(false);
+//     console.log('[pwa] re-register attempt done');
+//   } catch (e) {
+//     console.log('[pwa] bruteForceReinstall failed', e);
+//   }
+// }
+
+// export { bruteForceReinstall };
+
+export {};

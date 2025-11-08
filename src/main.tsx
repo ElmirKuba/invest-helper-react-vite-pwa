@@ -20,12 +20,12 @@ if (isNil(rootHtmlElement)) {
     // предотвратить всплытие в консоли как фатальную ошибку (DevTools всё равно покажет),
     // но в проде можно сюда отправлять небольшие логи.
     // eslint-disable-next-line no-console
-    console.debug('Captured window.error:', ev.message, ev.filename, ev.lineno);
+    console.log('Captured window.error:', ev.message, ev.filename, ev.lineno);
   });
 
   window.addEventListener('unhandledrejection', (ev) => {
     // eslint-disable-next-line no-console
-    console.debug('Captured unhandledrejection:', ev.reason);
+    console.log('Captured unhandledrejection:', ev.reason);
   });
 
   try {
@@ -36,7 +36,7 @@ if (isNil(rootHtmlElement)) {
     // Не бросаем — логируем и идём дальше.
     // В проде можно заменить console.warn на лог в ваш сервер/сервис логирования.
     // eslint-disable-next-line no-console
-    console.warn('PWA registration failed (ignored):', err);
+    console.log('PWA registration failed (ignored):', err);
   }
 
   createRoot(rootHtmlElement).render(
