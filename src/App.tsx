@@ -7,13 +7,21 @@ function App() {
 
   return (
     <div className="App">
-      <div>Счетчик: {count}</div>
+      <div>Счетчик: {count} (сколько раз нажали)</div>
+      <div>Привет, новая запись</div>
       <button
         onClick={() => {
           setCount(count + 1);
         }}
       >
         Нажать для инкримента
+      </button>
+      <button
+        onClick={() => {
+          setCount(count - 1);
+        }}
+      >
+        Нажать для декремента
       </button>
     </div>
   );
