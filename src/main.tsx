@@ -14,19 +14,19 @@ if (isNil(rootHtmlElement)) {
   throw new Error('Корневой элемент не найден!');
 }
 
-registerSW({
+const updateSW = registerSW({
   // /** true - пытается немедленно активировать регистрацию */
-  immediate: true,
-  // onNeedRefresh() {
-  //   // показать пользователю UI — "Доступна новая версия"
-  //   // например, сохранить функцию в state и показать кнопку "Обновить"
-  //   // при клике вызвать updateSW(true)
-  //   console.log('New SW available — prompt user to update');
-  // },
-  // onOfflineReady() {
-  //   // опционально — показать "Приложение доступно оффлайн"
-  //   console.log('App ready to work offline');
-  // },
+  // immediate: true,
+  onNeedRefresh() {
+    // лучше — сохранить флаг в state и показать пользователю кнопку
+    // Пример простого prompt:
+    if (confirm('Доступна новая версия приложения. Обновить сейчас?')) {
+      updateSW(true); // активируем новую версию
+    }
+  },
+  onOfflineReady() {
+    console.log('Приложение доступно оффлайн');
+  },
 });
 
 createRoot(rootHtmlElement).render(
