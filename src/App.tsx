@@ -1,8 +1,22 @@
+import { useState } from 'react';
 import './App.css';
 
 /** Основной компонент приложения */
 function App() {
-  return <div className="App">А теперь вообще уникальный новый текст!!!</div>;
+  const [count, setCount] = useState(0);
+
+  return (
+    <div className="App">
+      <div>Текст: {count}</div>
+      <button
+        onClick={() => {
+          setCount(count + 1);
+        }}
+      >
+        Кнопка
+      </button>
+    </div>
+  );
 }
 
 export default App;
