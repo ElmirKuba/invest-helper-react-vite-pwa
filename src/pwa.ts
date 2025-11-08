@@ -5,8 +5,10 @@
 // Внимание: принудительное unregister() / register() — небезопасно и отключено (см. ниже).
 
 import { registerSW } from 'virtual:pwa-register';
+import { compareVersions, cacheVersionOnStartup } from './version-check';
 
-const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 минут
+// const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 минут
+const CHECK_INTERVAL_MS = 30 * 1000; // 30sec (для продакшна поставьте 5*60*1000)
 const PROMPT_THROTTLE_MS = 10 * 60 * 1000; // не показывать prompt чаще чем раз в 10 минут
 const CONTROLLER_CHANGE_TIMEOUT = 3500; // ms — ждём controllerchange (iOS может блокировать)
 
@@ -30,7 +32,7 @@ async function attemptActivateWaiting(reg: ServiceWorkerRegistration | undefined
 
   lastPromptAt = now;
 
-  // Покажем простой confirm (как вы и просили).
+  // Покажем простой confirm (можно заменить на кастомный UI)
   const ok = confirm('Доступна новая версия приложения. Обновить сейчас?');
   if (!ok) {
     console.log('[pwa] user declined update (keeps waiting SW)');
@@ -79,7 +81,6 @@ async function attemptActivateWaiting(reg: ServiceWorkerRegistration | undefined
 }
 
 // Главная логика регистрации
-// updateSW = registerSW({
 registerSW({
   immediate: true,
   onNeedRefresh() {
@@ -101,29 +102,65 @@ registerSW({
 
 // Периодическая проверка: вызывает registration.update() и, если есть waiting — показывает prompt
 async function periodicCheckLoop() {
+  console.log('Я выполнился (periodicCheckLoop)');
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
 
   try {
+    // убедимся, что при первом заходе мы закешировали server copy в runtime-cache
+    try {
+      await cacheVersionOnStartup();
+    } catch (e) {
+      console.debug('[pwa] cacheVersionOnStartup error', e);
+    }
+
+    try {
+      const { cachedVersion, remoteVersion, isDifferent } = await compareVersions();
+      console.log('я сравниваю версии', { cachedVersion, remoteVersion, isDifferent });
+      if (isDifferent) {
+        // throttle prompt внутри attemptActivateWaiting, но тут — показываем сначала prompt о новой версии
+        const ok = confirm(
+          `Доступна новая версия приложения.\n` +
+            `Установленная версия: ${cachedVersion}\n` +
+            `Серверная версия: ${remoteVersion}\n\n` +
+            `Обновить сейчас?`
+        );
+
+        if (ok) {
+          const reg = await navigator.serviceWorker.getRegistration();
+          // попробуем стандартный flow: если есть waiting — активируем; если нет — вызвать reg.update()
+          if (reg?.waiting) {
+            await attemptActivateWaiting(reg);
+          } else {
+            try {
+              await reg?.update();
+              if (reg?.waiting) {
+                await attemptActivateWaiting(reg);
+              } else {
+                // fallback — перезагрузить страницу (возможно новые ассеты не применятся без SW, но попробуем)
+                location.reload();
+              }
+            } catch {
+              location.reload();
+            }
+          }
+        } else {
+          // пользователь отклонил — ничего не делаем (throttle защитит от спама)
+        }
+      }
+    } catch (e) {
+      // ignore version check errors
+      console.debug('[pwa] version check failed', e);
+    }
+
     const reg = await navigator.serviceWorker.getRegistration();
+    console.log('getRegistration', reg);
     if (reg) {
-      // Попытка скачать новую версию
       try {
         await reg.update();
-      } catch (e) {
-        // ignore update errors
-      }
+      } catch (e) {}
 
-      // Если появилась waiting версия — попытаться показать prompt
       if (reg.waiting) {
         attemptActivateWaiting(reg);
-      }
-    } else {
-      // Если нет регистрации (не зарегистрирован), можно попробовать зарегать через updateSW
-      try {
-        // updateSW(undefined) не даст нам reg, но registerSW уже зарегистрирован выше
-        // Оставляем здесь для информации.
-      } catch (e) {
-        // ignore
       }
     }
   } catch (e) {

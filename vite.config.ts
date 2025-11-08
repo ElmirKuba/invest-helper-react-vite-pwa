@@ -10,6 +10,20 @@ export default defineConfig({
       registerType: 'prompt',
       workbox: {
         globPatterns: ['**/*.{html,css,js,ico,png,svg,jpg,webmanifest,json,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/version\.json(\?.*)?$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'version-json-cache',
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 5,
+                maxAgeSeconds: 60 * 60 * 24, // на ваше усмотрение
+              },
+            },
+          },
+        ],
       },
       manifest: {
         theme_color: '#8936FF',
