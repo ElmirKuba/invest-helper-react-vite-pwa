@@ -8,6 +8,11 @@ function App() {
   return (
     <div className="App">
       <div>Счетчик: {count} (сколько раз нажали)</div>
+      <br />
+      <br />
+      <div>азаз лол кек 17:37 пишу правку</div>
+      <br />
+      <br />
       <button
         onClick={() => {
           setCount(count + 1);
