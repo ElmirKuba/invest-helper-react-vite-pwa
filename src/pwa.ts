@@ -5,7 +5,7 @@
 // Внимание: принудительное unregister() / register() — небезопасно и отключено (см. ниже).
 
 import { registerSW } from 'virtual:pwa-register';
-import { compareVersions, cacheVersionOnStartup } from './version-check';
+import { cacheVersionOnStartup, fetchRemoteVersion, readCachedVersion } from './version-check';
 
 // const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 минут
 const CHECK_INTERVAL_MS = 30 * 1000; // 30sec (для продакшна поставьте 5*60*1000)
