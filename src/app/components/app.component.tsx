@@ -60,7 +60,9 @@ export const AppComponent = () => {
         <br />
         <div>С приложением взаимодействовали: {usedCount} раз</div>
         <div>unixtime последнего использования: {lastUsedUnixTime}</div>
-        <div>Произошло обновление функционала: 5</div>
+        <br />
+        <br />
+        <div>Произошло обновление функционала: 6</div>
         <br />
         <br />
         <button
