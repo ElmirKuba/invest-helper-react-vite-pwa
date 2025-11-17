@@ -7,30 +7,18 @@ export const AppComponent = () => {
   const [count, setCount] = useState(0);
   const [usedCount, setUsedCount] = useState(0);
   const [lastUsedUnixTime, setLastUsedUnixTime] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  const [updateSWFunc, setUpdateSWFunc] = useState<Function | null>(null);
 
-  useEffect(() => {
-    console.log('AppComponent родился!');
-  }, []);
-
-  useReturnToTab(
-    () => {
-      setUsedCount(usedCount + 1);
-      setLastUsedUnixTime(Date.now);
-
-      navigator.serviceWorker.getRegistration().then(async (reg: ServiceWorkerRegistration | undefined) => {
-        console.log('reg getRegistration:::', reg);
-      });
-    },
-    { cooldownMs: 5_000, debounceMs: 150 }
-  );
-
-  const activeSWForButton = async () => {
+  const activateSWForInitApp = async () => {
     (async () => {
       if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         window.addEventListener('load', async () => {
           try {
             const { registerPWA } = await import('./../../pwa');
-            registerPWA();
+            const { updateSW } = registerPWA();
+
+            setUpdateSWFunc(updateSW);
 
             const isStandalone =
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,6 +33,24 @@ export const AppComponent = () => {
     })();
   };
 
+  useEffect(() => {
+    console.log('AppComponent родился!');
+
+    void activateSWForInitApp();
+  }, []);
+
+  useReturnToTab(
+    () => {
+      setUsedCount(usedCount + 1);
+      setLastUsedUnixTime(Date.now);
+
+      navigator.serviceWorker.getRegistration().then(async (reg: ServiceWorkerRegistration | undefined) => {
+        console.log('reg getRegistration:::', reg);
+      });
+    },
+    { cooldownMs: 5_000, debounceMs: 150 }
+  );
+
   return (
     <StrictMode>
       <div className="app">
@@ -53,7 +59,7 @@ export const AppComponent = () => {
         <br />
         <div>С приложением взаимодействовали: {usedCount} раз</div>
         <div>unixtime последнего использования: {lastUsedUnixTime}</div>
-        <div>Произошло обновление функционала: 3</div>
+        <div>Произошло обновление функционала: 4</div>
         <br />
         <br />
         <button
@@ -71,7 +77,14 @@ export const AppComponent = () => {
           Нажать для декремента
         </button>
         <br />
-        <button onClick={activeSWForButton}>Активировать SW</button>
+        <button
+          onClick={() => {
+            console.log('updateSWFunc::', updateSWFunc, typeof updateSWFunc);
+            updateSWFunc!();
+          }}
+        >
+          Активировать SW
+        </button>
       </div>
     </StrictMode>
   );

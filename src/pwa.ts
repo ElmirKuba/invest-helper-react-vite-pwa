@@ -30,7 +30,7 @@ export function registerPWA() {
     },
   });
 
-  return updateSW;
+  return { updateSW };
 }
 
 async function forceSkipWaitingAndReload() {
