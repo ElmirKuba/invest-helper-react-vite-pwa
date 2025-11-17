@@ -1,9 +1,21 @@
-import { StrictMode, useState } from 'react';
+import { StrictMode, useEffect, useState } from 'react';
 import './app.component.css';
+import { useReturnToTab } from '../hooks/use-return-to-tab.hook';
 
 /** Основной компонент приложения */
 export const AppComponent = () => {
   const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    console.log('AppComponent родился!');
+  }, []);
+
+  useReturnToTab(
+    () => {
+      console.log('useReturnToTab 5_000');
+    },
+    { cooldownMs: 5_000, debounceMs: 150 }
+  );
 
   return (
     <StrictMode>
