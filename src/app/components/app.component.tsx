@@ -4,7 +4,11 @@ import { useReturnToTab } from '../hooks/use-return-to-tab.hook';
 
 /** Основной компонент приложения */
 export const AppComponent = () => {
-  const [count, setCount] = useState(0);
+  /**
+   * Счётчик кликов.
+   * @type {[number, React.Dispatch<React.SetStateAction<number>>]}
+   */
+  const [count, setCount] = useState<number>(0);
   const [usedCount, setUsedCount] = useState(0);
   const [lastUsedUnixTime, setLastUsedUnixTime] = useState(0);
 
@@ -70,7 +74,7 @@ export const AppComponent = () => {
         <div>unixtime последнего использования: {lastUsedUnixTime}</div>
         <br />
         <br />
-        <div>Произошло обновление функционала: 9</div>
+        <div>Мы победили это долбанное PWA:D!!!</div>
         <br />
         <br />
         <button
