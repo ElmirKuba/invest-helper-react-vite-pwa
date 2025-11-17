@@ -8,13 +8,15 @@ export function registerPWA() {
         if (ok) {
           console.log('updateSW: ', updateSW, typeof updateSW);
           if (typeof updateSW === 'function') {
-            updateSW(true);
-          } else {
-            console.warn('updateSW не доступна — пробуем принудительно обновить через navigator.serviceWorker');
-            navigator.serviceWorker?.getRegistration().then((reg) => {
-              reg?.waiting?.postMessage({ type: 'SKIP_WAITING' });
-              window.location.reload();
+            // Обычно работает: updateSW(true) -> попытается применить обновление и перезагрузить
+            updateSW(true).catch((e) => {
+              console.log('updateSW() rejected', e);
+              // запасной путь ниже
+              forceSkipWaitingAndReload();
             });
+          } else {
+            // запасной вариант
+            forceSkipWaitingAndReload();
           }
         } else {
           console.log('[INF]: Пользователь отклонил обновление — остаётся старая версия.');
@@ -29,4 +31,25 @@ export function registerPWA() {
   });
 
   return updateSW;
+}
+
+async function forceSkipWaitingAndReload() {
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg?.waiting) {
+      // посылаем сообщение, как ожидает наш sw.ts
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      // после активации нужно перезагрузить страницу, чтобы загрузить новые ресурсы контролируемые SW
+      // даём немного времени на активацию
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } else {
+      // если нет waiting — просто перезагрузим
+      window.location.reload();
+    }
+  } catch (err) {
+    console.log('forceSkipWaitingAndReload err', err);
+    window.location.reload();
+  }
 }
