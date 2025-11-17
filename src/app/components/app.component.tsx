@@ -24,6 +24,27 @@ export const AppComponent = () => {
     { cooldownMs: 5_000, debounceMs: 150 }
   );
 
+  const activeSWForButton = async () => {
+    (async () => {
+      if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+        window.addEventListener('load', async () => {
+          try {
+            const { registerPWA } = await import('./../../pwa');
+            registerPWA();
+
+            const isStandalone =
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+
+            console.log('[LOG]: PWA registration attempted. Standalone mode:', isStandalone);
+          } catch (err) {
+            console.log('[ERR]: Ошибка регистрации PWA:', err);
+          }
+        });
+      }
+    })();
+  };
+
   return (
     <StrictMode>
       <div className="app">
@@ -49,6 +70,8 @@ export const AppComponent = () => {
         >
           Нажать для декремента
         </button>
+        <br />
+        <button onClick={activeSWForButton}>Активировать SW</button>
       </div>
     </StrictMode>
   );

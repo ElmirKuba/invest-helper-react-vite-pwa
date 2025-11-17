@@ -12,23 +12,7 @@ if (isNil(rootHtmlElement)) {
   throw new Error('Корневой элемент не найден!');
 }
 
-(async () => {
-  createRoot(rootHtmlElement).render(<AppComponent />);
-
-  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
-      try {
-        const { registerPWA } = await import('./pwa');
-        registerPWA();
-        const isStandalone =
-          window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
-        console.log('[LOG]: PWA registration attempted. Standalone mode:', isStandalone);
-      } catch (err) {
-        console.log('[ERR]: Ошибка регистрации PWA:', err);
-      }
-    });
-  }
-})();
+createRoot(rootHtmlElement).render(<AppComponent />);
 
 /**
  * TODO:
