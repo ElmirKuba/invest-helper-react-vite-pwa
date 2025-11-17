@@ -72,7 +72,7 @@ export function useReturnToTab(onReturn: () => void | Promise<void>, opts: Opts 
     function onFocus() {
       schedule(100);
     }
-    function onPageshow(e: PageTransitionEvent) {
+    function onPageshow(_e: PageTransitionEvent) {
       // pageshow.persisted true — восстановление из bfcache, но проверим в любом случае
       schedule(100);
     }
