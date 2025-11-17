@@ -7,8 +7,16 @@ export const AppComponent = () => {
   const [count, setCount] = useState(0);
   const [usedCount, setUsedCount] = useState(0);
   const [lastUsedUnixTime, setLastUsedUnixTime] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  const [updateSWFunc, setUpdateSWFunc] = useState<Function | null>(null);
+
+  const reactivateSW = async () => {
+    const serviceWorkers = await window.navigator.serviceWorker.getRegistrations();
+
+    for (const sw of serviceWorkers) {
+      const resultUpdate = await sw.update();
+
+      console.log('resultUpdate::', resultUpdate);
+    }
+  };
 
   const activateSWForInitApp = async () => {
     (async () => {
@@ -16,9 +24,7 @@ export const AppComponent = () => {
         window.addEventListener('load', async () => {
           try {
             import('../../pwa').then(({ registerPWA }) => {
-              const { updateSW } = registerPWA();
-
-              setUpdateSWFunc(() => updateSW);
+              registerPWA();
 
               const isStandalone =
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,6 +53,8 @@ export const AppComponent = () => {
 
       navigator.serviceWorker.getRegistration().then(async (reg: ServiceWorkerRegistration | undefined) => {
         console.log('reg getRegistration:::', reg);
+
+        reactivateSW();
       });
     },
     { cooldownMs: 5_000, debounceMs: 150 }
@@ -62,7 +70,7 @@ export const AppComponent = () => {
         <div>unixtime последнего использования: {lastUsedUnixTime}</div>
         <br />
         <br />
-        <div>Произошло обновление функционала: 8</div>
+        <div>Произошло обновление функционала: 9</div>
         <br />
         <br />
         <button
@@ -80,24 +88,6 @@ export const AppComponent = () => {
           Нажать для декремента
         </button>
         <br />
-        <button
-          onClick={async () => {
-            console.log('updateSWFunc::', updateSWFunc, typeof updateSWFunc);
-            updateSWFunc!(true);
-
-            // await(await window.navigator.serviceWorker.getRegistrations())[0].update().waiting;
-
-            const serviceWorkers = await window.navigator.serviceWorker.getRegistrations();
-
-            for (const sw of serviceWorkers) {
-              const resultUpdate = await sw.update();
-
-              console.log('resultUpdate::', resultUpdate);
-            }
-          }}
-        >
-          Активировать SW
-        </button>
       </div>
     </StrictMode>
   );
