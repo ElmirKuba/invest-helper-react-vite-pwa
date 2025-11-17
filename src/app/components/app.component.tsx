@@ -1,17 +1,17 @@
 import { StrictMode, useState } from 'react';
-import './App.css';
+import './app.component.css';
 
 /** Основной компонент приложения */
-function App() {
+export const AppComponent = () => {
   const [count, setCount] = useState(0);
 
   return (
     <StrictMode>
-      <div className="App">
+      <div className="app">
         <div>Счетчик: {count} (текущее кол-во)</div>
         <br />
         <br />
-        <div>Произошло обновление функционала: 2</div>
+        <div>Произошло обновление функционала: 3</div>
         <br />
         <br />
         <button
@@ -31,6 +31,4 @@ function App() {
       </div>
     </StrictMode>
   );
-}
-
-export default App;
+};

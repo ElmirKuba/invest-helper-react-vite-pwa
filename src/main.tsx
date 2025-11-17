@@ -3,7 +3,7 @@ import { isNil } from 'lodash';
 
 import './index.css';
 
-import App from './App.tsx';
+import { AppComponent } from './app/components/app.component.tsx';
 
 /** Корневой элемент для монтирования приложения */
 const rootHtmlElement = document.getElementById('root');
@@ -13,7 +13,7 @@ if (isNil(rootHtmlElement)) {
 }
 
 (async () => {
-  createRoot(rootHtmlElement).render(<App />);
+  createRoot(rootHtmlElement).render(<AppComponent />);
 
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
