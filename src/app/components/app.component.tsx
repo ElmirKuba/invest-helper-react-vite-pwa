@@ -62,7 +62,7 @@ export const AppComponent = () => {
         <div>unixtime последнего использования: {lastUsedUnixTime}</div>
         <br />
         <br />
-        <div>Произошло обновление функционала: 7</div>
+        <div>Произошло обновление функционала: 8</div>
         <br />
         <br />
         <button
