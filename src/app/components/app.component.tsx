@@ -5,6 +5,8 @@ import { useReturnToTab } from '../hooks/use-return-to-tab.hook';
 /** Основной компонент приложения */
 export const AppComponent = () => {
   const [count, setCount] = useState(0);
+  const [usedCount, setUsedCount] = useState(0);
+  const [lastUsedUnixTime, setLastUsedUnixTime] = useState(0);
 
   useEffect(() => {
     console.log('AppComponent родился!');
@@ -13,6 +15,8 @@ export const AppComponent = () => {
   useReturnToTab(
     () => {
       console.log('useReturnToTab 5_000');
+      setUsedCount(usedCount + 1);
+      setLastUsedUnixTime(Date.now);
     },
     { cooldownMs: 5_000, debounceMs: 150 }
   );
@@ -23,6 +27,8 @@ export const AppComponent = () => {
         <div>Счетчик: {count} (текущее кол-во)</div>
         <br />
         <br />
+        <div>С приложением взаимодействовали: {usedCount} раз</div>
+        <div>unixtime последнего использования: {lastUsedUnixTime}</div>
         <div>Произошло обновление функционала: 3</div>
         <br />
         <br />
