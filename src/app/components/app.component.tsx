@@ -14,9 +14,12 @@ export const AppComponent = () => {
 
   useReturnToTab(
     () => {
-      console.log('useReturnToTab 5_000');
       setUsedCount(usedCount + 1);
       setLastUsedUnixTime(Date.now);
+
+      navigator.serviceWorker.getRegistration().then(async (reg: ServiceWorkerRegistration | undefined) => {
+        console.log('reg getRegistration:::', reg);
+      });
     },
     { cooldownMs: 5_000, debounceMs: 150 }
   );
