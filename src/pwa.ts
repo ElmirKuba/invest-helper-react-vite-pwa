@@ -33,7 +33,7 @@ export function registerPWA() {
   return { updateSW };
 }
 
-async function forceSkipWaitingAndReload() {
+export async function forceSkipWaitingAndReload() {
   try {
     const reg = await navigator.serviceWorker.getRegistration();
     if (reg?.waiting) {

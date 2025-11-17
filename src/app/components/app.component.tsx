@@ -15,16 +15,17 @@ export const AppComponent = () => {
       if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         window.addEventListener('load', async () => {
           try {
-            const { registerPWA } = await import('./../../pwa');
-            const { updateSW } = registerPWA();
+            import('../../pwa').then(({ registerPWA }) => {
+              const { updateSW } = registerPWA();
 
-            setUpdateSWFunc(updateSW);
+              setUpdateSWFunc(() => updateSW);
 
-            const isStandalone =
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+              const isStandalone =
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
 
-            console.log('[LOG]: PWA registration attempted. Standalone mode:', isStandalone);
+              console.log('[LOG]: PWA registration attempted. Standalone mode:', isStandalone);
+            });
           } catch (err) {
             console.log('[ERR]: Ошибка регистрации PWA:', err);
           }
@@ -59,7 +60,7 @@ export const AppComponent = () => {
         <br />
         <div>С приложением взаимодействовали: {usedCount} раз</div>
         <div>unixtime последнего использования: {lastUsedUnixTime}</div>
-        <div>Произошло обновление функционала: 4</div>
+        <div>Произошло обновление функционала: 5</div>
         <br />
         <br />
         <button
@@ -80,7 +81,7 @@ export const AppComponent = () => {
         <button
           onClick={() => {
             console.log('updateSWFunc::', updateSWFunc, typeof updateSWFunc);
-            updateSWFunc!();
+            updateSWFunc!(true);
           }}
         >
           Активировать SW
