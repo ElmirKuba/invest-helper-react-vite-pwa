@@ -52,7 +52,6 @@ export const AppComponent = () => {
     { cooldownMs: 5_000, debounceMs: 150 }
   );
 
-  //(await (await window.navigator.serviceWorker.getRegistrations())[0].update()).waiting
   return (
     <StrictMode>
       <div className="app">
@@ -82,9 +81,19 @@ export const AppComponent = () => {
         </button>
         <br />
         <button
-          onClick={() => {
+          onClick={async () => {
             console.log('updateSWFunc::', updateSWFunc, typeof updateSWFunc);
             updateSWFunc!(true);
+
+            // await(await window.navigator.serviceWorker.getRegistrations())[0].update().waiting;
+
+            const serviceWorkers = await window.navigator.serviceWorker.getRegistrations();
+
+            for (const sw of serviceWorkers) {
+              const resultUpdate = await sw.update();
+
+              console.log('resultUpdate::', resultUpdate);
+            }
           }}
         >
           Активировать SW
