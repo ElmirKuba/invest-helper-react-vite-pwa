@@ -7,27 +7,25 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      /** пишем свой sw.js */
+      strategies: 'injectManifest',
+      /** где лежит исходник SW */
+      srcDir: 'src',
+      /** использовать TypeScript SW */
+      filename: 'sw.ts',
       registerType: 'prompt',
+      includeAssets: ['favicon.svg', 'robots.txt', 'icons/*.png'],
       workbox: {
         globPatterns: ['**/*.{html,css,js,ico,png,svg,jpg,webmanifest,json,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /\/version\.json(\?.*)?$/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'version-json-cache',
-              networkTimeoutSeconds: 3,
-              expiration: {
-                maxEntries: 5,
-                maxAgeSeconds: 60 * 60 * 24, // на ваше усмотрение
-              },
-            },
-          },
-        ],
+        cleanupOutdatedCaches: true,
       },
       manifest: {
-        theme_color: '#8936FF',
+        name: 'Invest Helper Application',
+        short_name: 'Invest Helper',
+        start_url: '.',
+        display: 'standalone',
         background_color: '#2EC6FE',
+        theme_color: '#8936FF',
         icons: [
           {
             purpose: 'maskable',
@@ -57,11 +55,7 @@ export default defineConfig({
           },
         ],
         orientation: 'any',
-        display: 'standalone',
         lang: 'ru-RU',
-        name: 'Invest Helper',
-        short_name: 'IH PWA',
-        start_url: '.',
         description: 'Помощник диверсификации портфеля',
       },
     }),

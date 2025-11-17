@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { isNil } from 'lodash';
 
@@ -13,35 +12,27 @@ if (isNil(rootHtmlElement)) {
   throw new Error('Корневой элемент не найден!');
 }
 
-// Оборачиваем регистрацию PWA — если что-то пойдёт не так,
-// мы просто логируем и продолжаем рендер приложения.
 (async () => {
-  window.addEventListener('error', (ev) => {
-    // предотвратить всплытие в консоли как фатальную ошибку (DevTools всё равно покажет),
-    // но в проде можно сюда отправлять небольшие логи.
-    // eslint-disable-next-line no-console
-    console.debug('Captured window.error:', ev.message, ev.filename, ev.lineno);
-  });
+  createRoot(rootHtmlElement).render(<App />);
 
-  window.addEventListener('unhandledrejection', (ev) => {
-    // eslint-disable-next-line no-console
-    console.debug('Captured unhandledrejection:', ev.reason);
-  });
-
-  try {
-    if (typeof window !== 'undefined') {
-      await import('./pwa'); // динамический импорт — безопасно
-    }
-  } catch (err) {
-    // Не бросаем — логируем и идём дальше.
-    // В проде можно заменить console.warn на лог в ваш сервер/сервис логирования.
-    // eslint-disable-next-line no-console
-    console.warn('PWA registration failed (ignored):', err);
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const { registerPWA } = await import('./pwa');
+        registerPWA();
+        const isStandalone =
+          window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+        console.log('[LOG]: PWA registration attempted. Standalone mode:', isStandalone);
+      } catch (err) {
+        console.log('[ERR]: Ошибка регистрации PWA:', err);
+      }
+    });
   }
-
-  createRoot(rootHtmlElement).render(
-    <StrictMode>
-      <App />
-    </StrictMode>
-  );
 })();
+
+/**
+ * 1. Кэшировать данные из поля version json файла "version.json".
+ * 2. Проверять (делать запрос на корень сайта/version.json), если отличается значение с локальным закэшированным, обновлять приложение (перезагружать страницу скорее всего).
+ *    2.1. Когда? в onNeedRefresh
+ *    2.1. Когда фокус снова на приложении (отследить, что приложение снова в фокусе)
+ */
