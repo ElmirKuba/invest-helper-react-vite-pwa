@@ -8,7 +8,7 @@ function App() {
   return (
     <StrictMode>
       <div className="App">
-        <div>Счетчик: {count} (текущее кол-во)</div>
+        <div>Счетчик: {count}</div>
         <br />
         <br />
         <div>Произошло обновление функционала: 1</div>
