@@ -52,6 +52,7 @@ export const AppComponent = () => {
     { cooldownMs: 5_000, debounceMs: 150 }
   );
 
+  //(await (await window.navigator.serviceWorker.getRegistrations())[0].update()).waiting
   return (
     <StrictMode>
       <div className="app">
@@ -62,7 +63,7 @@ export const AppComponent = () => {
         <div>unixtime последнего использования: {lastUsedUnixTime}</div>
         <br />
         <br />
-        <div>Произошло обновление функционала: 6</div>
+        <div>Произошло обновление функционала: 7</div>
         <br />
         <br />
         <button
