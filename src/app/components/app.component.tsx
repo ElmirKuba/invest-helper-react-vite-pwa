@@ -70,6 +70,10 @@ export const AppComponent = () => {
         <div>unixtime последнего использования: {lastUsedUnixTime}</div>
         <br />
         <br />
+        <div>Мы победили это долбанное PWA:D!!!</div>
+        <div>А вот такое кто-то ожидал, а?</div>
+        <br />
+        <br />
         <button
           onClick={() => {
             setCount(count + 1);
